@@ -3,10 +3,36 @@ title: "Stat5009_group17_rmd"
 output: html_document
 date: "2026-05-21"
 ---
+Title: Detection of poor academics performance in students. 
+It is complicated to detect student who are likely to fail, Some may be performing well all semester and at the end their performance declines. Vice Versa. Therefore, we are here to create a predictive model to detect students who may be in need of academic assistance early. 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+The task: Supervised learning
+Response (y): Final grade 
+Features (x): 30 socio-economic features. 
+
+
+```{r}
+### Everyone needs to update this based on their paths and run accordingly 
+setwd("D:/Curtin materials/stat5009_decision/A3/Stat5009_group17")
 ```
+
+Merge data from both tables 
+```{r}
+# code given by lecturer to merge the datasets 
+d1=read.table("student-mat.csv",sep=";",header=TRUE)
+d2=read.table("student-por.csv",sep=";",header=TRUE)
+d3=merge(d1,d2,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet"))
+print(c("number of students: ", nrow(d3))) # 382 students
+print("### Summary ###")
+print(summary(d3))
+```
+- As we can see, the data has been cleaned, with no outliers and missing data. 
+
+Print some data to see what they have
+```{r}
+head(d1)
+head(d2)
+``` 
 
 
 
