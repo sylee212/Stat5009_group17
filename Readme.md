@@ -26,3 +26,5 @@
 # daily routine before starting to write code, 
 1.tools > version control > pull 
 
+# done writting code?
+1. tools > version control > commit > write message > commit > push 
