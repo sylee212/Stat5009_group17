@@ -17,6 +17,9 @@ setwd("D:/Curtin materials/stat5009_decision/A3/Stat5009_group17")
 ```
 
 Merge data from both tables 
+d1 is for maths results
+d2 is for portugese results
+d3 is for the data for intersection for students who are in both math and portugese
 ```{r}
 # code given by lecturer to merge the datasets 
 d1=read.table("student-mat.csv",sep=";",header=TRUE)
@@ -32,7 +35,83 @@ Print some data to see what they have
 ```{r}
 head(d1)
 head(d2)
+head(d3)
 ``` 
 
+convert the categorical data into numerical factors with hot encoding
+```{r}
+d1$school = ifelse(d1$school == "GP",0,1)
+d1$sex = ifelse(d1$sex == "F",0,1)
+d1$address = ifelse(d1$address == "R",0,1)
+d1$famsize = ifelse(d1$famsize == "LE3",0,1)
+d1$Pstatus = ifelse(d1$Pstatus=="A",0,1)
 
+# levels are to force it to follow our desired sequence
+d1$Mjob = factor(d1$Mjob)
+# to see the factors
+levels(d1$Mjob)
+d1$Fjob = factor(d1$Fjob)
+d1$reason = factor(d1$reason)
+d1$guardian = factor(d1$guardian)
+d1$schoolsup = factor(d1$schoolsup)
+d1$famsup = factor(d1$famsup)
+d1$paid =  ifelse(d1$paid == "no",0,1)
+d1$activities =  ifelse(d1$activities == "no",0,1)
+d1$nursery =  ifelse(d1$nursery == "no",0,1)
+d1$higher =  ifelse(d1$higher == "no",0,1)
+d1$internet =  ifelse(d1$internet == "no",0,1)
+d1$romantic =  ifelse(d1$romantic == "no",0,1)
+
+head(d1)
+summary(d1)
+
+# for d2
+d2$school = ifelse(d2$school == "GP",0,1)
+d2$sex = ifelse(d2$sex == "F",0,1)
+d2$address = ifelse(d2$address == "R",0,1)
+d2$famsize = ifelse(d2$famsize == "LE3",0,1)
+d2$Pstatus = ifelse(d2$Pstatus=="A",0,1)
+
+# levels are to force it to follow our desired sequence
+d2$Mjob = factor(d2$Mjob)
+# to see the factors
+levels(d2$Mjob)
+d2$Fjob = factor(d2$Fjob)
+d2$reason = factor(d2$reason)
+d2$guardian = factor(d2$guardian)
+d2$schoolsup = factor(d2$schoolsup)
+d2$famsup = factor(d2$famsup)
+d2$paid =  ifelse(d2$paid == "no",0,1)
+d2$activities =  ifelse(d2$activities == "no",0,1)
+d2$nursery =  ifelse(d2$nursery == "no",0,1)
+d2$higher =  ifelse(d2$higher == "no",0,1)
+d2$internet =  ifelse(d2$internet == "no",0,1)
+d2$romantic =  ifelse(d2$romantic == "no",0,1)
+
+# merge the code again
+d3=merge(d1,d2,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet"))
+
+```
+
+linear regression for maths students
+```{r}
+# preparing the data for training and testing
+n = nrow(d1)
+training.d1.ind = sample(1:n, size = 0.8*n)
+
+d1.training = d1[training.d1.ind,]
+d1.test = d1[-training.d1.ind,]
+
+# predicting if failing previously is correlated to final total
+d1.fail.lm = lm(G3~failures, data=d1.training)
+summary(d1.fail.lm)
+
+print("#####################")
+d1.absence.lm = lm(G3~absences, data=d1.training)
+summary(d1.absence.lm)
+
+print("#####################")
+d1.study.lm = lm(G3~studytime, data=d1.training)
+summary(d1.study.lm)
+```
 
