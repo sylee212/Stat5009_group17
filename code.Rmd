@@ -94,6 +94,7 @@ d3=merge(d1,d2,by=c("school","sex","age","address","famsize","Pstatus","Medu","F
 ```
 
 linear regression for maths students
+Does failing or absences related to the grades?
 ```{r}
 # preparing the data for training and testing
 n = nrow(d1)
@@ -113,5 +114,30 @@ summary(d1.absence.lm)
 print("#####################")
 d1.study.lm = lm(G3~studytime, data=d1.training)
 summary(d1.study.lm)
+```
+
+Trying auto multiple linear regression to see which fields are good
+```{r}
+library(leaps)
+mod.fw = regsubsets(
+  G3~.,
+  nvmax = 8, 
+  data = d1.training,
+  method = "forward" 
+  )
+sm.mod.fw = summary(mod.fw)
+print(sm.mod.fw)
+```
+As we can see G1 and G2 are highly related and used, which is not good because these are secondary response variables. So we have to recreate the forward model without these
+```{r}
+mod.fw = regsubsets(
+  G3~.
+  -G1 -G2,
+  nvmax = 8, 
+  data = d1.training,
+  method = "forward" 
+  )
+sm.mod.fw = summary(mod.fw)
+print(sm.mod.fw)
 ```
 
