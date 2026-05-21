@@ -1,3 +1,6 @@
+# original dataset source
+https://archive.ics.uci.edu/dataset/320/student+performance 
+
 # creating project
 1. create project
 2. create git
