@@ -139,5 +139,10 @@ mod.fw = regsubsets(
   )
 sm.mod.fw = summary(mod.fw)
 print(sm.mod.fw)
+
+# for bic, pick the lowest one
+print(sm.mod.fw$bic)
+# higher is better for R^2
+print(sm.mod.fw$adjr2)
 ```
 
