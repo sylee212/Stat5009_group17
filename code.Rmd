@@ -290,6 +290,14 @@ output = data.frame(
 )
 print(output)
 
+print(anova(model4.lm,model9.lm))
 ```
-As we can see, model 4 has a lower MSE and RMSE. What does this mean? It means that on average, the squared difference between the prediction and actual is 21 and the actual predictions deviate by approximately 4.58. m
+As we can see, model 4 has a lower MSE and RMSE. What does this mean? It means that on average, the squared difference between the prediction and actual is 21 and the actual predictions deviate by approximately 4.58. 
+
+With ANOVA, we can see that model9 has an F statistic of 4.4811. Which means that model9's ratio to of signal to noise is 4.48 with a p value < 0.001 which means that this F statistics is very unlikely to be caused randomly. 
+
+This means that with ANOVA, model9 is shown to be better. 
+
+So there is a contradiction between our test MSE,RSME and ANOVA?
+- this means that although the 5 new features added was good in training, it does not mean that it is good in generalization for future predictions.
 
