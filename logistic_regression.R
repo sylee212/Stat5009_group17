@@ -4,7 +4,7 @@
 # G1 and G2 excluded — they are mid-term grades, not pre-term predictors
 # ============================================================
 
-# ---------- Load data ----------
+# To load data
 d1 = read.table("student-mat.csv", sep = ";", header = TRUE)
 d2 = read.table("student-por.csv", sep = ";", header = TRUE)
 
@@ -29,6 +29,7 @@ encode = function(df) {
   df$famsup     = factor(df$famsup)
   df
 }
+
 
 d1 = encode(d1)
 d2 = encode(d2)
