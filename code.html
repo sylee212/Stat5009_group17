@@ -355,10 +355,18 @@ display: none;
 </div>
 
 
-<p>Title:</p>
+<p>Title: Detection of poor academics performance in students. It is
+complicated to detect student who are likely to fail, Some may be
+performing well all semester and at the end their performance declines.
+Vice Versa. Therefore, we are here to create a predictive model to
+detect students who may be in need of academic assistance early.</p>
+<p>The task: Supervised learning Response (y): Final grade Features (x):
+30 socio-economic features.</p>
 <pre class="r"><code>### Everyone needs to update this based on their paths and run accordingly 
 setwd(&quot;D:/Curtin materials/stat5009_decision/A3/Stat5009_group17&quot;)</code></pre>
-<p>Merge data from both tables</p>
+<p>Merge data from both tables d1 is for maths results d2 is for
+portugese results d3 is for the data for intersection for students who
+are in both math and portugese</p>
 <pre class="r"><code># code given by lecturer to merge the datasets 
 d1=read.table(&quot;student-mat.csv&quot;,sep=&quot;;&quot;,header=TRUE)
 d2=read.table(&quot;student-por.csv&quot;,sep=&quot;;&quot;,header=TRUE)
@@ -522,6 +530,952 @@ missing data.</li>
 ## 4        0 14 14 14
 ## 5        0 11 13 13
 ## 6        6 12 12 13</code></pre>
+<pre class="r"><code>head(d3)</code></pre>
+<pre><code>##   school sex age address famsize Pstatus Medu Fedu     Mjob     Fjob     reason
+## 1     GP   F  15       R     GT3       T    1    1  at_home    other       home
+## 2     GP   F  15       R     GT3       T    1    1    other    other reputation
+## 3     GP   F  15       R     GT3       T    2    2  at_home    other reputation
+## 4     GP   F  15       R     GT3       T    2    4 services   health     course
+## 5     GP   F  15       R     GT3       T    3    3 services services reputation
+## 6     GP   F  15       R     GT3       T    3    4 services   health     course
+##   nursery internet guardian.x traveltime.x studytime.x failures.x schoolsup.x
+## 1     yes      yes     mother            2           4          1         yes
+## 2      no      yes     mother            1           2          2         yes
+## 3     yes       no     mother            1           1          0         yes
+## 4     yes      yes     mother            1           3          0         yes
+## 5     yes      yes      other            2           3          2          no
+## 6     yes      yes     mother            1           3          0         yes
+##   famsup.x paid.x activities.x higher.x romantic.x famrel.x freetime.x goout.x
+## 1      yes    yes          yes      yes         no        3          1       2
+## 2      yes     no           no      yes        yes        3          3       4
+## 3      yes    yes          yes      yes         no        4          3       1
+## 4      yes    yes          yes      yes         no        4          3       2
+## 5      yes    yes          yes      yes        yes        4          2       1
+## 6      yes    yes          yes      yes         no        4          3       2
+##   Dalc.x Walc.x health.x absences.x G1.x G2.x G3.x guardian.y traveltime.y
+## 1      1      1        1          2    7   10   10     mother            2
+## 2      2      4        5          2    8    6    5     mother            1
+## 3      1      1        2          8   14   13   13     mother            1
+## 4      1      1        5          2   10    9    8     mother            1
+## 5      2      3        3          8   10   10   10      other            2
+## 6      1      1        5          2   12   12   11     mother            1
+##   studytime.y failures.y schoolsup.y famsup.y paid.y activities.y higher.y
+## 1           4          0         yes      yes    yes          yes      yes
+## 2           2          0         yes      yes     no           no      yes
+## 3           1          0         yes      yes     no          yes      yes
+## 4           3          0         yes      yes     no          yes      yes
+## 5           3          0          no      yes    yes          yes      yes
+## 6           3          0         yes      yes     no          yes      yes
+##   romantic.y famrel.y freetime.y goout.y Dalc.y Walc.y health.y absences.y G1.y
+## 1         no        3          1       2      1      1        1          4   13
+## 2        yes        3          3       4      2      4        5          2   13
+## 3         no        4          3       1      1      1        2          8   14
+## 4         no        4          3       2      1      1        5          2   10
+## 5        yes        4          2       1      2      3        3          2   13
+## 6         no        4          3       2      1      1        5          2   11
+##   G2.y G3.y
+## 1   13   13
+## 2   11   11
+## 3   13   12
+## 4   11   10
+## 5   13   13
+## 6   12   12</code></pre>
+<p>convert the categorical data into numerical factors with hot
+encoding</p>
+<pre class="r"><code>d1_encoded = data.frame(d1)
+d1_encoded$school = ifelse(d1_encoded$school == &quot;GP&quot;,0,1)
+d1_encoded$sex = ifelse(d1_encoded$sex == &quot;F&quot;,0,1)
+d1_encoded$address = ifelse(d1_encoded$address == &quot;R&quot;,0,1)
+d1_encoded$famsize = ifelse(d1_encoded$famsize == &quot;LE3&quot;,0,1)
+d1_encoded$Pstatus = ifelse(d1_encoded$Pstatus==&quot;A&quot;,0,1)
+
+# levels are to force it to follow our desired sequence
+d1_encoded$Mjob_teacher = ifelse(d1_encoded$Mjob == &quot;teacher&quot; , 1 , 0 )
+d1_encoded$Mjob_health = ifelse(d1_encoded$Mjob == &quot;health&quot; , 1 , 0 )
+d1_encoded$Mjob_services = ifelse(d1_encoded$Mjob == &quot;services&quot; , 1 , 0 )
+d1_encoded$Mjob_athome = ifelse(d1_encoded$Mjob == &quot;at_home&quot; , 1 , 0 )
+d1_encoded$Mjob_other = ifelse(d1_encoded$Mjob == &quot;other&quot; , 1 , 0 )
+# remove the original column 
+d1_encoded$Mjob = NULL
+
+d1_encoded$Fjob_teacher = ifelse(d1_encoded$Fjob == &quot;teacher&quot; , 1 , 0 )
+d1_encoded$Fjob_health = ifelse(d1_encoded$Fjob == &quot;health&quot; , 1 , 0 )
+d1_encoded$Fjob_services = ifelse(d1_encoded$Fjob == &quot;services&quot; , 1 , 0 )
+d1_encoded$Fjob_athome = ifelse(d1_encoded$Fjob == &quot;at_home&quot; , 1 , 0 )
+d1_encoded$Fjob_other = ifelse(d1_encoded$Fjob == &quot;other&quot; , 1 , 0 )
+# remove the original column 
+d1_encoded$Fjob = NULL
+
+d1_encoded$reason_home = ifelse(d1_encoded$reason == &quot;home&quot;,1,0)
+d1_encoded$reason_reputation = ifelse(d1_encoded$reason == &quot;reputation&quot;,1,0)
+d1_encoded$reason_course = ifelse(d1_encoded$reason == &quot;course&quot;,1,0)
+d1_encoded$reason_other = ifelse(d1_encoded$reason == &quot;other&quot;,1,0)
+# remove the original column 
+d1_encoded$reason = NULL
+
+d1_encoded$guardian_mother = ifelse(d1_encoded$guardian == &quot;mother&quot;,1,0)
+d1_encoded$guardian_father = ifelse(d1_encoded$guardian == &quot;father&quot;,1,0)
+d1_encoded$guardian_other = ifelse(d1_encoded$guardian == &quot;other&quot;,1,0)
+# remove the original column 
+d1_encoded$guardian = NULL
+
+d1_encoded$schoolsup = ifelse(d1_encoded$schoolsup == &quot;yes&quot;, 1 ,0)
+
+d1_encoded$famsup = ifelse(d1_encoded$famsup == &quot;yes&quot;,1,0)
+
+d1_encoded$paid =  ifelse(d1_encoded$paid == &quot;no&quot;,0,1)
+d1_encoded$activities =  ifelse(d1_encoded$activities == &quot;no&quot;,0,1)
+d1_encoded$nursery =  ifelse(d1_encoded$nursery == &quot;no&quot;,0,1)
+d1_encoded$higher =  ifelse(d1_encoded$higher == &quot;no&quot;,0,1)
+d1_encoded$internet =  ifelse(d1_encoded$internet == &quot;no&quot;,0,1)
+d1_encoded$romantic =  ifelse(d1_encoded$romantic == &quot;no&quot;,0,1)
+
+head(d1_encoded)</code></pre>
+<pre><code>##   school sex age address famsize Pstatus Medu Fedu traveltime studytime
+## 1      0   0  18       1       1       0    4    4          2         2
+## 2      0   0  17       1       1       1    1    1          1         2
+## 3      0   0  15       1       0       1    1    1          1         2
+## 4      0   0  15       1       1       1    4    2          1         3
+## 5      0   0  16       1       1       1    3    3          1         2
+## 6      0   1  16       1       0       1    4    3          1         2
+##   failures schoolsup famsup paid activities nursery higher internet romantic
+## 1        0         1      0    0          0       1      1        0        0
+## 2        0         0      1    0          0       0      1        1        0
+## 3        3         1      0    1          0       1      1        1        0
+## 4        0         0      1    1          1       1      1        1        1
+## 5        0         0      1    1          0       1      1        0        0
+## 6        0         0      1    1          1       1      1        1        0
+##   famrel freetime goout Dalc Walc health absences G1 G2 G3 Mjob_teacher
+## 1      4        3     4    1    1      3        6  5  6  6            0
+## 2      5        3     3    1    1      3        4  5  5  6            0
+## 3      4        3     2    2    3      3       10  7  8 10            0
+## 4      3        2     2    1    1      5        2 15 14 15            0
+## 5      4        3     2    1    2      5        4  6 10 10            0
+## 6      5        4     2    1    2      5       10 15 15 15            0
+##   Mjob_health Mjob_services Mjob_athome Mjob_other Fjob_teacher Fjob_health
+## 1           0             0           1          0            1           0
+## 2           0             0           1          0            0           0
+## 3           0             0           1          0            0           0
+## 4           1             0           0          0            0           0
+## 5           0             0           0          1            0           0
+## 6           0             1           0          0            0           0
+##   Fjob_services Fjob_athome Fjob_other reason_home reason_reputation
+## 1             0           0          0           0                 0
+## 2             0           0          1           0                 0
+## 3             0           0          1           0                 0
+## 4             1           0          0           1                 0
+## 5             0           0          1           1                 0
+## 6             0           0          1           0                 1
+##   reason_course reason_other guardian_mother guardian_father guardian_other
+## 1             1            0               1               0              0
+## 2             1            0               0               1              0
+## 3             0            1               1               0              0
+## 4             0            0               1               0              0
+## 5             0            0               0               1              0
+## 6             0            0               1               0              0</code></pre>
+<pre class="r"><code>summary(d1_encoded)</code></pre>
+<pre><code>##      school            sex              age          address      
+##  Min.   :0.0000   Min.   :0.0000   Min.   :15.0   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:16.0   1st Qu.:1.0000  
+##  Median :0.0000   Median :0.0000   Median :17.0   Median :1.0000  
+##  Mean   :0.1165   Mean   :0.4734   Mean   :16.7   Mean   :0.7772  
+##  3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:18.0   3rd Qu.:1.0000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :22.0   Max.   :1.0000  
+##     famsize          Pstatus            Medu            Fedu      
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.000   Min.   :0.000  
+##  1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:2.000   1st Qu.:2.000  
+##  Median :1.0000   Median :1.0000   Median :3.000   Median :2.000  
+##  Mean   :0.7114   Mean   :0.8962   Mean   :2.749   Mean   :2.522  
+##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:4.000   3rd Qu.:3.000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :4.000   Max.   :4.000  
+##    traveltime      studytime        failures        schoolsup     
+##  Min.   :1.000   Min.   :1.000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:1.000   1st Qu.:1.000   1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median :1.000   Median :2.000   Median :0.0000   Median :0.0000  
+##  Mean   :1.448   Mean   :2.035   Mean   :0.3342   Mean   :0.1291  
+##  3rd Qu.:2.000   3rd Qu.:2.000   3rd Qu.:0.0000   3rd Qu.:0.0000  
+##  Max.   :4.000   Max.   :4.000   Max.   :3.0000   Max.   :1.0000  
+##      famsup            paid          activities        nursery      
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:1.0000  
+##  Median :1.0000   Median :0.0000   Median :1.0000   Median :1.0000  
+##  Mean   :0.6127   Mean   :0.4582   Mean   :0.5089   Mean   :0.7949  
+##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
+##      higher          internet         romantic          famrel     
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :1.000  
+##  1st Qu.:1.0000   1st Qu.:1.0000   1st Qu.:0.0000   1st Qu.:4.000  
+##  Median :1.0000   Median :1.0000   Median :0.0000   Median :4.000  
+##  Mean   :0.9494   Mean   :0.8329   Mean   :0.3342   Mean   :3.944  
+##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:5.000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :5.000  
+##     freetime         goout            Dalc            Walc      
+##  Min.   :1.000   Min.   :1.000   Min.   :1.000   Min.   :1.000  
+##  1st Qu.:3.000   1st Qu.:2.000   1st Qu.:1.000   1st Qu.:1.000  
+##  Median :3.000   Median :3.000   Median :1.000   Median :2.000  
+##  Mean   :3.235   Mean   :3.109   Mean   :1.481   Mean   :2.291  
+##  3rd Qu.:4.000   3rd Qu.:4.000   3rd Qu.:2.000   3rd Qu.:3.000  
+##  Max.   :5.000   Max.   :5.000   Max.   :5.000   Max.   :5.000  
+##      health         absences            G1              G2       
+##  Min.   :1.000   Min.   : 0.000   Min.   : 3.00   Min.   : 0.00  
+##  1st Qu.:3.000   1st Qu.: 0.000   1st Qu.: 8.00   1st Qu.: 9.00  
+##  Median :4.000   Median : 4.000   Median :11.00   Median :11.00  
+##  Mean   :3.554   Mean   : 5.709   Mean   :10.91   Mean   :10.71  
+##  3rd Qu.:5.000   3rd Qu.: 8.000   3rd Qu.:13.00   3rd Qu.:13.00  
+##  Max.   :5.000   Max.   :75.000   Max.   :19.00   Max.   :19.00  
+##        G3         Mjob_teacher     Mjob_health      Mjob_services   
+##  Min.   : 0.00   Min.   :0.0000   Min.   :0.00000   Min.   :0.0000  
+##  1st Qu.: 8.00   1st Qu.:0.0000   1st Qu.:0.00000   1st Qu.:0.0000  
+##  Median :11.00   Median :0.0000   Median :0.00000   Median :0.0000  
+##  Mean   :10.42   Mean   :0.1468   Mean   :0.08608   Mean   :0.2608  
+##  3rd Qu.:14.00   3rd Qu.:0.0000   3rd Qu.:0.00000   3rd Qu.:1.0000  
+##  Max.   :20.00   Max.   :1.0000   Max.   :1.00000   Max.   :1.0000  
+##   Mjob_athome       Mjob_other     Fjob_teacher      Fjob_health     
+##  Min.   :0.0000   Min.   :0.000   Min.   :0.00000   Min.   :0.00000  
+##  1st Qu.:0.0000   1st Qu.:0.000   1st Qu.:0.00000   1st Qu.:0.00000  
+##  Median :0.0000   Median :0.000   Median :0.00000   Median :0.00000  
+##  Mean   :0.1494   Mean   :0.357   Mean   :0.07342   Mean   :0.04557  
+##  3rd Qu.:0.0000   3rd Qu.:1.000   3rd Qu.:0.00000   3rd Qu.:0.00000  
+##  Max.   :1.0000   Max.   :1.000   Max.   :1.00000   Max.   :1.00000  
+##  Fjob_services    Fjob_athome        Fjob_other      reason_home    
+##  Min.   :0.000   Min.   :0.00000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.000   1st Qu.:0.00000   1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median :0.000   Median :0.00000   Median :1.0000   Median :0.0000  
+##  Mean   :0.281   Mean   :0.05063   Mean   :0.5494   Mean   :0.2759  
+##  3rd Qu.:1.000   3rd Qu.:0.00000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+##  Max.   :1.000   Max.   :1.00000   Max.   :1.0000   Max.   :1.0000  
+##  reason_reputation reason_course     reason_other     guardian_mother 
+##  Min.   :0.0000    Min.   :0.0000   Min.   :0.00000   Min.   :0.0000  
+##  1st Qu.:0.0000    1st Qu.:0.0000   1st Qu.:0.00000   1st Qu.:0.0000  
+##  Median :0.0000    Median :0.0000   Median :0.00000   Median :1.0000  
+##  Mean   :0.2658    Mean   :0.3671   Mean   :0.09114   Mean   :0.6911  
+##  3rd Qu.:1.0000    3rd Qu.:1.0000   3rd Qu.:0.00000   3rd Qu.:1.0000  
+##  Max.   :1.0000    Max.   :1.0000   Max.   :1.00000   Max.   :1.0000  
+##  guardian_father  guardian_other   
+##  Min.   :0.0000   Min.   :0.00000  
+##  1st Qu.:0.0000   1st Qu.:0.00000  
+##  Median :0.0000   Median :0.00000  
+##  Mean   :0.2278   Mean   :0.08101  
+##  3rd Qu.:0.0000   3rd Qu.:0.00000  
+##  Max.   :1.0000   Max.   :1.00000</code></pre>
+<pre class="r"><code># for d2
+d2_encoded = data.frame(d2)
+d2_encoded$school = ifelse(d2_encoded$school == &quot;GP&quot;,0,1)
+d2_encoded$sex = ifelse(d2_encoded$sex == &quot;F&quot;,0,1)
+d2_encoded$address = ifelse(d2_encoded$address == &quot;R&quot;,0,1)
+d2_encoded$famsize = ifelse(d2_encoded$famsize == &quot;LE3&quot;,0,1)
+d2_encoded$Pstatus = ifelse(d2_encoded$Pstatus==&quot;A&quot;,0,1)
+
+# levels are to force it to follow our desired sequence
+d2_encoded$Mjob_teacher = ifelse(d2_encoded$Mjob == &quot;teacher&quot; , 1 , 0 )
+d2_encoded$Mjob_health = ifelse(d2_encoded$Mjob == &quot;health&quot; , 1 , 0 )
+d2_encoded$Mjob_services = ifelse(d2_encoded$Mjob == &quot;services&quot; , 1 , 0 )
+d2_encoded$Mjob_athome = ifelse(d2_encoded$Mjob == &quot;at_home&quot; , 1 , 0 )
+d2_encoded$Mjob_other = ifelse(d2_encoded$Mjob == &quot;other&quot; , 1 , 0 )
+# remove the original column 
+d2_encoded$Mjob = NULL
+
+d2_encoded$Fjob_teacher = ifelse(d2_encoded$Fjob == &quot;teacher&quot; , 1 , 0 )
+d2_encoded$Fjob_health = ifelse(d2_encoded$Fjob == &quot;health&quot; , 1 , 0 )
+d2_encoded$Fjob_services = ifelse(d2_encoded$Fjob == &quot;services&quot; , 1 , 0 )
+d2_encoded$Fjob_athome = ifelse(d2_encoded$Fjob == &quot;at_home&quot; , 1 , 0 )
+d2_encoded$Fjob_other = ifelse(d2_encoded$Fjob == &quot;other&quot; , 1 , 0 )
+# remove the original column 
+d2_encoded$Fjob = NULL
+
+d2_encoded$reason_home = ifelse(d2_encoded$reason == &quot;home&quot;,1,0)
+d2_encoded$reason_reputation = ifelse(d2_encoded$reason == &quot;reputation&quot;,1,0)
+d2_encoded$reason_course = ifelse(d2_encoded$reason == &quot;course&quot;,1,0)
+d2_encoded$reason_other = ifelse(d2_encoded$reason == &quot;other&quot;,1,0)
+# remove the original column 
+d2_encoded$reason = NULL
+
+d2_encoded$guardian_mother = ifelse(d2_encoded$guardian == &quot;mother&quot;,1,0)
+d2_encoded$guardian_father = ifelse(d2_encoded$guardian == &quot;father&quot;,1,0)
+d2_encoded$guardian_other = ifelse(d2_encoded$guardian == &quot;other&quot;,1,0)
+# remove the original column 
+d2_encoded$guardian = NULL
+
+d2_encoded$schoolsup = ifelse(d2_encoded$schoolsup == &quot;yes&quot;, 1 ,0)
+
+d2_encoded$famsup = ifelse(d2_encoded$famsup == &quot;yes&quot;,1,0)
+
+d2_encoded$paid =  ifelse(d2_encoded$paid == &quot;no&quot;,0,1)
+d2_encoded$activities =  ifelse(d2_encoded$activities == &quot;no&quot;,0,1)
+d2_encoded$nursery =  ifelse(d2_encoded$nursery == &quot;no&quot;,0,1)
+d2_encoded$higher =  ifelse(d2_encoded$higher == &quot;no&quot;,0,1)
+d2_encoded$internet =  ifelse(d2_encoded$internet == &quot;no&quot;,0,1)
+d2_encoded$romantic =  ifelse(d2_encoded$romantic == &quot;no&quot;,0,1)
+
+head(d2_encoded)</code></pre>
+<pre><code>##   school sex age address famsize Pstatus Medu Fedu traveltime studytime
+## 1      0   0  18       1       1       0    4    4          2         2
+## 2      0   0  17       1       1       1    1    1          1         2
+## 3      0   0  15       1       0       1    1    1          1         2
+## 4      0   0  15       1       1       1    4    2          1         3
+## 5      0   0  16       1       1       1    3    3          1         2
+## 6      0   1  16       1       0       1    4    3          1         2
+##   failures schoolsup famsup paid activities nursery higher internet romantic
+## 1        0         1      0    0          0       1      1        0        0
+## 2        0         0      1    0          0       0      1        1        0
+## 3        0         1      0    0          0       1      1        1        0
+## 4        0         0      1    0          1       1      1        1        1
+## 5        0         0      1    0          0       1      1        0        0
+## 6        0         0      1    0          1       1      1        1        0
+##   famrel freetime goout Dalc Walc health absences G1 G2 G3 Mjob_teacher
+## 1      4        3     4    1    1      3        4  0 11 11            0
+## 2      5        3     3    1    1      3        2  9 11 11            0
+## 3      4        3     2    2    3      3        6 12 13 12            0
+## 4      3        2     2    1    1      5        0 14 14 14            0
+## 5      4        3     2    1    2      5        0 11 13 13            0
+## 6      5        4     2    1    2      5        6 12 12 13            0
+##   Mjob_health Mjob_services Mjob_athome Mjob_other Fjob_teacher Fjob_health
+## 1           0             0           1          0            1           0
+## 2           0             0           1          0            0           0
+## 3           0             0           1          0            0           0
+## 4           1             0           0          0            0           0
+## 5           0             0           0          1            0           0
+## 6           0             1           0          0            0           0
+##   Fjob_services Fjob_athome Fjob_other reason_home reason_reputation
+## 1             0           0          0           0                 0
+## 2             0           0          1           0                 0
+## 3             0           0          1           0                 0
+## 4             1           0          0           1                 0
+## 5             0           0          1           1                 0
+## 6             0           0          1           0                 1
+##   reason_course reason_other guardian_mother guardian_father guardian_other
+## 1             1            0               1               0              0
+## 2             1            0               0               1              0
+## 3             0            1               1               0              0
+## 4             0            0               1               0              0
+## 5             0            0               0               1              0
+## 6             0            0               1               0              0</code></pre>
+<pre class="r"><code>summary(d2_encoded)</code></pre>
+<pre><code>##      school            sex              age           address      
+##  Min.   :0.0000   Min.   :0.0000   Min.   :15.00   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:16.00   1st Qu.:0.0000  
+##  Median :0.0000   Median :0.0000   Median :17.00   Median :1.0000  
+##  Mean   :0.3482   Mean   :0.4099   Mean   :16.74   Mean   :0.6965  
+##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:18.00   3rd Qu.:1.0000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :22.00   Max.   :1.0000  
+##     famsize          Pstatus            Medu            Fedu      
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.000   Min.   :0.000  
+##  1st Qu.:0.0000   1st Qu.:1.0000   1st Qu.:2.000   1st Qu.:1.000  
+##  Median :1.0000   Median :1.0000   Median :2.000   Median :2.000  
+##  Mean   :0.7042   Mean   :0.8767   Mean   :2.515   Mean   :2.307  
+##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:4.000   3rd Qu.:3.000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :4.000   Max.   :4.000  
+##    traveltime      studytime        failures        schoolsup     
+##  Min.   :1.000   Min.   :1.000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:1.000   1st Qu.:1.000   1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median :1.000   Median :2.000   Median :0.0000   Median :0.0000  
+##  Mean   :1.569   Mean   :1.931   Mean   :0.2219   Mean   :0.1048  
+##  3rd Qu.:2.000   3rd Qu.:2.000   3rd Qu.:0.0000   3rd Qu.:0.0000  
+##  Max.   :4.000   Max.   :4.000   Max.   :3.0000   Max.   :1.0000  
+##      famsup            paid           activities        nursery      
+##  Min.   :0.0000   Min.   :0.00000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.00000   1st Qu.:0.0000   1st Qu.:1.0000  
+##  Median :1.0000   Median :0.00000   Median :0.0000   Median :1.0000  
+##  Mean   :0.6133   Mean   :0.06009   Mean   :0.4854   Mean   :0.8028  
+##  3rd Qu.:1.0000   3rd Qu.:0.00000   3rd Qu.:1.0000   3rd Qu.:1.0000  
+##  Max.   :1.0000   Max.   :1.00000   Max.   :1.0000   Max.   :1.0000  
+##      higher          internet         romantic          famrel     
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :1.000  
+##  1st Qu.:1.0000   1st Qu.:1.0000   1st Qu.:0.0000   1st Qu.:4.000  
+##  Median :1.0000   Median :1.0000   Median :0.0000   Median :4.000  
+##  Mean   :0.8937   Mean   :0.7673   Mean   :0.3683   Mean   :3.931  
+##  3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:1.0000   3rd Qu.:5.000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :5.000  
+##     freetime        goout            Dalc            Walc          health     
+##  Min.   :1.00   Min.   :1.000   Min.   :1.000   Min.   :1.00   Min.   :1.000  
+##  1st Qu.:3.00   1st Qu.:2.000   1st Qu.:1.000   1st Qu.:1.00   1st Qu.:2.000  
+##  Median :3.00   Median :3.000   Median :1.000   Median :2.00   Median :4.000  
+##  Mean   :3.18   Mean   :3.185   Mean   :1.502   Mean   :2.28   Mean   :3.536  
+##  3rd Qu.:4.00   3rd Qu.:4.000   3rd Qu.:2.000   3rd Qu.:3.00   3rd Qu.:5.000  
+##  Max.   :5.00   Max.   :5.000   Max.   :5.000   Max.   :5.00   Max.   :5.000  
+##     absences            G1             G2              G3       
+##  Min.   : 0.000   Min.   : 0.0   Min.   : 0.00   Min.   : 0.00  
+##  1st Qu.: 0.000   1st Qu.:10.0   1st Qu.:10.00   1st Qu.:10.00  
+##  Median : 2.000   Median :11.0   Median :11.00   Median :12.00  
+##  Mean   : 3.659   Mean   :11.4   Mean   :11.57   Mean   :11.91  
+##  3rd Qu.: 6.000   3rd Qu.:13.0   3rd Qu.:13.00   3rd Qu.:14.00  
+##  Max.   :32.000   Max.   :19.0   Max.   :19.00   Max.   :19.00  
+##   Mjob_teacher     Mjob_health      Mjob_services     Mjob_athome   
+##  Min.   :0.0000   Min.   :0.00000   Min.   :0.0000   Min.   :0.000  
+##  1st Qu.:0.0000   1st Qu.:0.00000   1st Qu.:0.0000   1st Qu.:0.000  
+##  Median :0.0000   Median :0.00000   Median :0.0000   Median :0.000  
+##  Mean   :0.1109   Mean   :0.07396   Mean   :0.2096   Mean   :0.208  
+##  3rd Qu.:0.0000   3rd Qu.:0.00000   3rd Qu.:0.0000   3rd Qu.:0.000  
+##  Max.   :1.0000   Max.   :1.00000   Max.   :1.0000   Max.   :1.000  
+##    Mjob_other      Fjob_teacher      Fjob_health      Fjob_services   
+##  Min.   :0.0000   Min.   :0.00000   Min.   :0.00000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.00000   1st Qu.:0.00000   1st Qu.:0.0000  
+##  Median :0.0000   Median :0.00000   Median :0.00000   Median :0.0000  
+##  Mean   :0.3975   Mean   :0.05547   Mean   :0.03544   Mean   :0.2789  
+##  3rd Qu.:1.0000   3rd Qu.:0.00000   3rd Qu.:0.00000   3rd Qu.:1.0000  
+##  Max.   :1.0000   Max.   :1.00000   Max.   :1.00000   Max.   :1.0000  
+##   Fjob_athome        Fjob_other      reason_home     reason_reputation
+##  Min.   :0.00000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   
+##  1st Qu.:0.00000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000   
+##  Median :0.00000   Median :1.0000   Median :0.0000   Median :0.0000   
+##  Mean   :0.06471   Mean   :0.5655   Mean   :0.2296   Mean   :0.2203   
+##  3rd Qu.:0.00000   3rd Qu.:1.0000   3rd Qu.:0.0000   3rd Qu.:0.0000   
+##  Max.   :1.00000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   
+##  reason_course     reason_other    guardian_mother  guardian_father 
+##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
+##  1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000   1st Qu.:0.0000  
+##  Median :0.0000   Median :0.0000   Median :1.0000   Median :0.0000  
+##  Mean   :0.4391   Mean   :0.1109   Mean   :0.7011   Mean   :0.2357  
+##  3rd Qu.:1.0000   3rd Qu.:0.0000   3rd Qu.:1.0000   3rd Qu.:0.0000  
+##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
+##  guardian_other   
+##  Min.   :0.00000  
+##  1st Qu.:0.00000  
+##  Median :0.00000  
+##  Mean   :0.06317  
+##  3rd Qu.:0.00000  
+##  Max.   :1.00000</code></pre>
+<pre class="r"><code># merge the code again
+d3_encoded=merge(d1_encoded,d2_encoded,by=c(&quot;school&quot;,&quot;sex&quot;,&quot;age&quot;,&quot;address&quot;,&quot;famsize&quot;,&quot;Pstatus&quot;,&quot;Medu&quot;,&quot;Fedu&quot;,&quot;Mjob_teacher&quot;,&quot;Mjob_health&quot;,&quot;Mjob_services&quot;,&quot;Mjob_athome&quot;,&quot;Mjob_other&quot;,&quot;Fjob_teacher&quot;,&quot;Fjob_health&quot;,&quot;Fjob_services&quot;,&quot;Fjob_athome&quot;,&quot;Fjob_other&quot;,&quot;reason_home&quot;,&quot;reason_reputation&quot;,&quot;reason_course&quot;,&quot;reason_other&quot;,&quot;nursery&quot;,&quot;internet&quot;))</code></pre>
+<p>linear regression for maths students Does failing or absences related
+to the grades?</p>
+<pre class="r"><code># preparing the data for training and testing
+n = nrow(d1_encoded)
+training.d1_encoded.ind = sample(1:n, size = 0.8*n)
+
+d1_encoded.training = d1_encoded[training.d1_encoded.ind,]
+d1_encoded.test = d1_encoded[-training.d1_encoded.ind,]
+
+# predicting if failing previously is correlated to final total
+d1_encoded.fail.lm = lm(G3~failures, data=d1_encoded.training)
+summary(d1_encoded.fail.lm)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = G3 ~ failures, data = d1_encoded.training)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -11.1415  -2.1415  -0.1415   2.8585   9.0064 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  11.1415     0.2639  42.221  &lt; 2e-16 ***
+## failures     -2.1479     0.3141  -6.838  4.2e-11 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.245 on 314 degrees of freedom
+## Multiple R-squared:  0.1296, Adjusted R-squared:  0.1268 
+## F-statistic: 46.76 on 1 and 314 DF,  p-value: 4.204e-11</code></pre>
+<pre class="r"><code>print(&quot;#####################&quot;)</code></pre>
+<pre><code>## [1] &quot;#####################&quot;</code></pre>
+<pre class="r"><code>d1_encoded.absence.lm = lm(G3~absences, data=d1_encoded.training)
+summary(d1_encoded.absence.lm)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = G3 ~ absences, data = d1_encoded.training)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -10.2284  -2.2284   0.1851   2.7716   9.6718 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 10.22842    0.31498  32.473   &lt;2e-16 ***
+## absences     0.02496    0.03166   0.788    0.431    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.545 on 314 degrees of freedom
+## Multiple R-squared:  0.001975,   Adjusted R-squared:  -0.001203 
+## F-statistic: 0.6214 on 1 and 314 DF,  p-value: 0.4311</code></pre>
+<pre class="r"><code>print(&quot;#####################&quot;)</code></pre>
+<pre><code>## [1] &quot;#####################&quot;</code></pre>
+<pre class="r"><code>d1_encoded.study.lm = lm(G3~studytime, data=d1_encoded.training)
+summary(d1_encoded.study.lm)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = G3 ~ studytime, data = d1_encoded.training)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -11.5144  -1.7613   0.2387   3.0700   9.2387 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)   9.1770     0.6635  13.830   &lt;2e-16 ***
+## studytime     0.5843     0.2993   1.952   0.0518 .  
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.522 on 314 degrees of freedom
+## Multiple R-squared:  0.01199,    Adjusted R-squared:  0.008846 
+## F-statistic: 3.811 on 1 and 314 DF,  p-value: 0.05179</code></pre>
+<p>Trying auto multiple linear regression to see which fields are
+good</p>
+<pre class="r"><code>library(leaps)</code></pre>
+<pre><code>## Warning: package &#39;leaps&#39; was built under R version 4.5.3</code></pre>
+<pre class="r"><code>mod.fw = regsubsets(
+  G3~.,
+  nvmax = 8, 
+  data = d1_encoded.training,
+  method = &quot;forward&quot; 
+  )</code></pre>
+<pre><code>## Warning in leaps.setup(x, y, wt = wt, nbest = nbest, nvmax = nvmax, force.in =
+## force.in, : 4 linear dependencies found</code></pre>
+<pre><code>## Reordering variables and trying again:</code></pre>
+<pre class="r"><code>sm.mod.fw = summary(mod.fw)
+print(sm.mod.fw)</code></pre>
+<pre><code>## Subset selection object
+## Call: regsubsets.formula(G3 ~ ., nvmax = 8, data = d1_encoded.training, 
+##     method = &quot;forward&quot;)
+## 45 Variables  (and intercept)
+##                   Forced in Forced out
+## school                FALSE      FALSE
+## sex                   FALSE      FALSE
+## age                   FALSE      FALSE
+## address               FALSE      FALSE
+## famsize               FALSE      FALSE
+## Pstatus               FALSE      FALSE
+## Medu                  FALSE      FALSE
+## Fedu                  FALSE      FALSE
+## traveltime            FALSE      FALSE
+## studytime             FALSE      FALSE
+## failures              FALSE      FALSE
+## schoolsup             FALSE      FALSE
+## famsup                FALSE      FALSE
+## paid                  FALSE      FALSE
+## activities            FALSE      FALSE
+## nursery               FALSE      FALSE
+## higher                FALSE      FALSE
+## internet              FALSE      FALSE
+## romantic              FALSE      FALSE
+## famrel                FALSE      FALSE
+## freetime              FALSE      FALSE
+## goout                 FALSE      FALSE
+## Dalc                  FALSE      FALSE
+## Walc                  FALSE      FALSE
+## health                FALSE      FALSE
+## absences              FALSE      FALSE
+## G1                    FALSE      FALSE
+## G2                    FALSE      FALSE
+## Mjob_teacher          FALSE      FALSE
+## Mjob_health           FALSE      FALSE
+## Mjob_services         FALSE      FALSE
+## Mjob_athome           FALSE      FALSE
+## Fjob_teacher          FALSE      FALSE
+## Fjob_health           FALSE      FALSE
+## Fjob_services         FALSE      FALSE
+## Fjob_athome           FALSE      FALSE
+## reason_home           FALSE      FALSE
+## reason_reputation     FALSE      FALSE
+## reason_course         FALSE      FALSE
+## guardian_mother       FALSE      FALSE
+## guardian_father       FALSE      FALSE
+## Mjob_other            FALSE      FALSE
+## Fjob_other            FALSE      FALSE
+## reason_other          FALSE      FALSE
+## guardian_other        FALSE      FALSE
+## 1 subsets of each size up to 9
+## Selection Algorithm: forward
+##          school sex age address famsize Pstatus Medu Fedu traveltime studytime
+## 1  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+## 2  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+## 3  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+## 4  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+## 5  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+## 6  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+## 7  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+## 8  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+## 9  ( 1 ) &quot; &quot;    &quot; &quot; &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;      
+##          failures schoolsup famsup paid activities nursery higher internet
+## 1  ( 1 ) &quot; &quot;      &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;     
+## 2  ( 1 ) &quot; &quot;      &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;     
+## 3  ( 1 ) &quot; &quot;      &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;     
+## 4  ( 1 ) &quot; &quot;      &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;     
+## 5  ( 1 ) &quot;*&quot;      &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;     
+## 6  ( 1 ) &quot;*&quot;      &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;     
+## 7  ( 1 ) &quot;*&quot;      &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot;*&quot;     
+## 8  ( 1 ) &quot;*&quot;      &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot;*&quot;     
+## 9  ( 1 ) &quot;*&quot;      &quot;*&quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot;*&quot;     
+##          romantic famrel freetime goout Dalc Walc health absences G1  G2 
+## 1  ( 1 ) &quot; &quot;      &quot; &quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot; &quot;*&quot;
+## 2  ( 1 ) &quot; &quot;      &quot;*&quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot; &quot;*&quot;
+## 3  ( 1 ) &quot; &quot;      &quot;*&quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot;*&quot;      &quot; &quot; &quot;*&quot;
+## 4  ( 1 ) &quot; &quot;      &quot;*&quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot;*&quot;      &quot;*&quot; &quot;*&quot;
+## 5  ( 1 ) &quot; &quot;      &quot;*&quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot;*&quot;      &quot;*&quot; &quot;*&quot;
+## 6  ( 1 ) &quot; &quot;      &quot;*&quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot;*&quot;      &quot;*&quot; &quot;*&quot;
+## 7  ( 1 ) &quot; &quot;      &quot;*&quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot;*&quot;      &quot;*&quot; &quot;*&quot;
+## 8  ( 1 ) &quot; &quot;      &quot;*&quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot;*&quot;  &quot; &quot;    &quot;*&quot;      &quot;*&quot; &quot;*&quot;
+## 9  ( 1 ) &quot; &quot;      &quot;*&quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot;*&quot;  &quot; &quot;    &quot;*&quot;      &quot;*&quot; &quot;*&quot;
+##          Mjob_teacher Mjob_health Mjob_services Mjob_athome Mjob_other
+## 1  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 2  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 3  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 4  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 5  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 6  ( 1 ) &quot; &quot;          &quot; &quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;       
+## 7  ( 1 ) &quot; &quot;          &quot; &quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;       
+## 8  ( 1 ) &quot; &quot;          &quot; &quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;       
+## 9  ( 1 ) &quot; &quot;          &quot; &quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;       
+##          Fjob_teacher Fjob_health Fjob_services Fjob_athome Fjob_other
+## 1  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 2  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 3  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 4  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 5  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 6  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 7  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 8  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+## 9  ( 1 ) &quot; &quot;          &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;       
+##          reason_home reason_reputation reason_course reason_other
+## 1  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+## 2  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+## 3  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+## 4  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+## 5  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+## 6  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+## 7  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+## 8  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+## 9  ( 1 ) &quot; &quot;         &quot; &quot;               &quot; &quot;           &quot; &quot;         
+##          guardian_mother guardian_father guardian_other
+## 1  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;           
+## 2  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;           
+## 3  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;           
+## 4  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;           
+## 5  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;           
+## 6  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;           
+## 7  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;           
+## 8  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;           
+## 9  ( 1 ) &quot; &quot;             &quot; &quot;             &quot; &quot;</code></pre>
+<p>As we can see G1 and G2 are highly related and used, which is not
+good because these are secondary response variables. So we have to
+recreate the forward model without these</p>
+<pre class="r"><code># remove the school and sex
+d1_encoded.training.clean = d1_encoded.training[,-c(1,2)]
+mod.fw = regsubsets(
+  G3~.
+  -G1 -G2,
+  nvmax = 8, 
+  data = d1_encoded.training.clean,
+  method = &quot;exhaustive&quot; 
+  )</code></pre>
+<pre><code>## Warning in leaps.setup(x, y, wt = wt, nbest = nbest, nvmax = nvmax, force.in =
+## force.in, : 4 linear dependencies found</code></pre>
+<pre><code>## Reordering variables and trying again:</code></pre>
+<pre class="r"><code>sm.mod.fw = summary(mod.fw)
+print(sm.mod.fw)</code></pre>
+<pre><code>## Subset selection object
+## Call: regsubsets.formula(G3 ~ . - G1 - G2, nvmax = 8, data = d1_encoded.training.clean, 
+##     method = &quot;exhaustive&quot;)
+## 41 Variables  (and intercept)
+##                   Forced in Forced out
+## age                   FALSE      FALSE
+## address               FALSE      FALSE
+## famsize               FALSE      FALSE
+## Pstatus               FALSE      FALSE
+## Medu                  FALSE      FALSE
+## Fedu                  FALSE      FALSE
+## traveltime            FALSE      FALSE
+## studytime             FALSE      FALSE
+## failures              FALSE      FALSE
+## schoolsup             FALSE      FALSE
+## famsup                FALSE      FALSE
+## paid                  FALSE      FALSE
+## activities            FALSE      FALSE
+## nursery               FALSE      FALSE
+## higher                FALSE      FALSE
+## internet              FALSE      FALSE
+## romantic              FALSE      FALSE
+## famrel                FALSE      FALSE
+## freetime              FALSE      FALSE
+## goout                 FALSE      FALSE
+## Dalc                  FALSE      FALSE
+## Walc                  FALSE      FALSE
+## health                FALSE      FALSE
+## absences              FALSE      FALSE
+## Mjob_teacher          FALSE      FALSE
+## Mjob_health           FALSE      FALSE
+## Mjob_services         FALSE      FALSE
+## Mjob_athome           FALSE      FALSE
+## Fjob_teacher          FALSE      FALSE
+## Fjob_health           FALSE      FALSE
+## Fjob_services         FALSE      FALSE
+## Fjob_athome           FALSE      FALSE
+## reason_home           FALSE      FALSE
+## reason_reputation     FALSE      FALSE
+## reason_course         FALSE      FALSE
+## guardian_mother       FALSE      FALSE
+## guardian_father       FALSE      FALSE
+## Mjob_other            FALSE      FALSE
+## Fjob_other            FALSE      FALSE
+## reason_other          FALSE      FALSE
+## guardian_other        FALSE      FALSE
+## 1 subsets of each size up to 9
+## Selection Algorithm: exhaustive
+##          age address famsize Pstatus Medu Fedu traveltime studytime failures
+## 1  ( 1 ) &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+## 2  ( 1 ) &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+## 3  ( 1 ) &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+## 4  ( 1 ) &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+## 5  ( 1 ) &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot; &quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+## 6  ( 1 ) &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot;*&quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+## 7  ( 1 ) &quot; &quot; &quot; &quot;     &quot; &quot;     &quot; &quot;     &quot;*&quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+## 8  ( 1 ) &quot; &quot; &quot; &quot;     &quot;*&quot;     &quot; &quot;     &quot;*&quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+## 9  ( 1 ) &quot; &quot; &quot; &quot;     &quot;*&quot;     &quot; &quot;     &quot;*&quot;  &quot; &quot;  &quot; &quot;        &quot; &quot;       &quot;*&quot;     
+##          schoolsup famsup paid activities nursery higher internet romantic
+## 1  ( 1 ) &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot; &quot;     
+## 2  ( 1 ) &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot; &quot;     
+## 3  ( 1 ) &quot; &quot;       &quot; &quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot; &quot;     
+## 4  ( 1 ) &quot; &quot;       &quot;*&quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot; &quot;     
+## 5  ( 1 ) &quot; &quot;       &quot;*&quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot; &quot;     
+## 6  ( 1 ) &quot; &quot;       &quot;*&quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot; &quot;     
+## 7  ( 1 ) &quot; &quot;       &quot;*&quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot;*&quot;     
+## 8  ( 1 ) &quot; &quot;       &quot;*&quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot;*&quot;     
+## 9  ( 1 ) &quot; &quot;       &quot;*&quot;    &quot; &quot;  &quot; &quot;        &quot; &quot;     &quot; &quot;    &quot; &quot;      &quot;*&quot;     
+##          famrel freetime goout Dalc Walc health absences Mjob_teacher
+## 1  ( 1 ) &quot; &quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot;         
+## 2  ( 1 ) &quot; &quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot;         
+## 3  ( 1 ) &quot; &quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot;         
+## 4  ( 1 ) &quot; &quot;    &quot; &quot;      &quot; &quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot;         
+## 5  ( 1 ) &quot; &quot;    &quot; &quot;      &quot;*&quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot;         
+## 6  ( 1 ) &quot; &quot;    &quot; &quot;      &quot;*&quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot;         
+## 7  ( 1 ) &quot; &quot;    &quot; &quot;      &quot;*&quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot;         
+## 8  ( 1 ) &quot; &quot;    &quot; &quot;      &quot;*&quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot; &quot;      &quot; &quot;         
+## 9  ( 1 ) &quot; &quot;    &quot; &quot;      &quot;*&quot;   &quot; &quot;  &quot; &quot;  &quot; &quot;    &quot;*&quot;      &quot; &quot;         
+##          Mjob_health Mjob_services Mjob_athome Mjob_other Fjob_teacher
+## 1  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+## 2  ( 1 ) &quot; &quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+## 3  ( 1 ) &quot;*&quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+## 4  ( 1 ) &quot;*&quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+## 5  ( 1 ) &quot;*&quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+## 6  ( 1 ) &quot;*&quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+## 7  ( 1 ) &quot;*&quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+## 8  ( 1 ) &quot;*&quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+## 9  ( 1 ) &quot;*&quot;         &quot;*&quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;         
+##          Fjob_health Fjob_services Fjob_athome Fjob_other reason_home
+## 1  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+## 2  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+## 3  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+## 4  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+## 5  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+## 6  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+## 7  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+## 8  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+## 9  ( 1 ) &quot; &quot;         &quot; &quot;           &quot; &quot;         &quot; &quot;        &quot; &quot;        
+##          reason_reputation reason_course reason_other guardian_mother
+## 1  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+## 2  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+## 3  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+## 4  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+## 5  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+## 6  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+## 7  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+## 8  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+## 9  ( 1 ) &quot; &quot;               &quot; &quot;           &quot; &quot;          &quot; &quot;            
+##          guardian_father guardian_other
+## 1  ( 1 ) &quot; &quot;             &quot; &quot;           
+## 2  ( 1 ) &quot; &quot;             &quot; &quot;           
+## 3  ( 1 ) &quot; &quot;             &quot; &quot;           
+## 4  ( 1 ) &quot; &quot;             &quot; &quot;           
+## 5  ( 1 ) &quot; &quot;             &quot; &quot;           
+## 6  ( 1 ) &quot; &quot;             &quot; &quot;           
+## 7  ( 1 ) &quot; &quot;             &quot; &quot;           
+## 8  ( 1 ) &quot; &quot;             &quot; &quot;           
+## 9  ( 1 ) &quot; &quot;             &quot; &quot;</code></pre>
+<pre class="r"><code># for bic, pick the lowest one
+sm.mod.fw.bic = sm.mod.fw$bic
+
+# for printing #
+print(sm.mod.fw.bic)</code></pre>
+<pre><code>## [1] -32.35131 -38.01329 -39.37489 -39.12322 -37.64685 -36.07087 -34.06166
+## [8] -31.75421 -28.87328</code></pre>
+<pre class="r"><code>ind = 1
+for (x in 1:length(sm.mod.fw.bic) ){
+  t = paste0(&quot;Model(&quot;,x ,&quot;): &quot;, sm.mod.fw.bic[x])
+  print(t)
+  
+  if ( sm.mod.fw.bic[ind] &gt; sm.mod.fw.bic[x]){
+    ind = x
+  }
+  
+}</code></pre>
+<pre><code>## [1] &quot;Model(1): -32.351313816957&quot;
+## [1] &quot;Model(2): -38.0132892391416&quot;
+## [1] &quot;Model(3): -39.3748897802613&quot;
+## [1] &quot;Model(4): -39.1232183012853&quot;
+## [1] &quot;Model(5): -37.646853305001&quot;
+## [1] &quot;Model(6): -36.0708692154857&quot;
+## [1] &quot;Model(7): -34.0616556523443&quot;
+## [1] &quot;Model(8): -31.7542127692832&quot;
+## [1] &quot;Model(9): -28.8732806492692&quot;</code></pre>
+<pre class="r"><code>t = paste0(&quot;lowest BIc model(&quot;,ind, &quot;): &quot;, sm.mod.fw.bic[ind])
+print(t)</code></pre>
+<pre><code>## [1] &quot;lowest BIc model(3): -39.3748897802613&quot;</code></pre>
+<pre class="r"><code># higher is better for R^2
+sm.mod.fw.r2 = sm.mod.fw$adjr2
+print(&quot;R2&quot;)</code></pre>
+<pre><code>## [1] &quot;R2&quot;</code></pre>
+<pre class="r"><code>print(sm.mod.fw.r2)</code></pre>
+<pre><code>## [1] 0.1268314 0.1551269 0.1712959 0.1829866 0.1913762 0.1994190 0.2062861
+## [8] 0.2123429 0.2169254</code></pre>
+<pre class="r"><code>ind = 1
+for (x in 1:length(sm.mod.fw.r2) ){
+  t = paste0(&quot;Model(&quot;,x ,&quot;): &quot;, sm.mod.fw.r2[x])
+  print(t)
+  
+  if ( sm.mod.fw.r2[ind] &lt; sm.mod.fw.r2[x]){
+    ind = x
+  }
+  
+}</code></pre>
+<pre><code>## [1] &quot;Model(1): 0.126831448896201&quot;
+## [1] &quot;Model(2): 0.155126944515592&quot;
+## [1] &quot;Model(3): 0.171295902743208&quot;
+## [1] &quot;Model(4): 0.182986611345104&quot;
+## [1] &quot;Model(5): 0.191376221283233&quot;
+## [1] &quot;Model(6): 0.199419009705894&quot;
+## [1] &quot;Model(7): 0.206286081193152&quot;
+## [1] &quot;Model(8): 0.212342942992013&quot;
+## [1] &quot;Model(9): 0.216925425382156&quot;</code></pre>
+<pre class="r"><code>t = paste0(&quot;highest R^2 model(&quot;,ind, &quot;): &quot;, sm.mod.fw.r2[ind])
+print(t)</code></pre>
+<pre><code>## [1] &quot;highest R^2 model(9): 0.216925425382156&quot;</code></pre>
+<p>So what are the features the model has selected? - model 1: G3 ~
+failures - model 2: G3 ~ Mjob_services + failures - model 3: G3 ~
+Mjob_athome + Mjob_other+ failures - model 4: G3 ~ goout + Mjob_athome +
+Mjob_other+ failures - model 5: G3 ~ romantic + goout + Medu +
+Mjob_services + failures - model 6: G3 ~ freetime + romantic + goout +
+Medu + Mjob_services + failures - model 7: G3 ~ famsup + freetime +
+romantic + goout + Medu + Mjob_services + failures - model 8: G3 ~
+Mjob_health + famsup + freetime + romantic + goout + Medu +
+Mjob_services + failures - model 9: G3 ~ reason_reputation +
+reason_other + famsup + freetime + romantic + goout + Medu +
+Mjob_services + failures Hypothesis: 1) Failures affect grades 2)
+Parent’s being home and teaching children are a good indicator What is
+the model with the lowest BIC? which is measure of goodness of fit
+against complexity, of -43.6781849770169 - model 4, which is model 4: G3
+~ goout + Mjob_athome + Mjob_other+ failures</p>
+<p>What is the model with the highest features explaining the variation
+in response of 0.237360925545721 - model 9, which is model 9: G3 ~
+reason_reputation + reason_other + famsup + freetime + romantic + goout
++ Medu + Mjob_services + failures</p>
+<p>So what is the better choice? - model 4 has the lowest BIC of
+-43.6781849770169 with R^2 of 0.194678939518015, while model 9 has the
+highest BIC of -37.2292841481151, with R^2 of 0.237360925545721</p>
+<p>– so the transition from model 4 to 9 has an increase of R^2 of
+0.04268199 while the BIC increased by 6.448901</p>
+<p>— Therefore, the trade off between R^2 and BIC is “not worth it” and
+the model may have been learning noise instead. But let’s assess
+further</p>
+<pre class="r"><code># train the model on training data 
+model4.lm = lm(G3 ~ goout + Mjob_athome + Mjob_other+ failures, data = d1_encoded.training.clean )
+model9.lm = lm(G3 ~ reason_reputation + reason_other + famsup + freetime + romantic + goout + Medu + Mjob_services + failures , data = d1_encoded.training.clean)
+
+# evaluate on test data
+preds_model4 = predict(model4.lm, newdata = d1_encoded.test)
+preds_model9 = predict(model9.lm, newdata = d1_encoded.test)
+
+actual_g3 = d1_encoded.test$G3
+
+# calc mean square error
+mse_m4 = mean((preds_model4-actual_g3)^2)
+mse_m9 = mean((preds_model9-actual_g3)^2)
+
+# calc residual mean square error
+rmse_m4 = sqrt(mse_m4)
+rmse_m9 = sqrt(mse_m9)
+
+# print
+output = data.frame(
+  Model = c(&quot;model 4&quot;, &quot;model 9&quot;),
+  r2 = c(0.194678939518015,0.237360925545721),
+  mse = c(mse_m4,mse_m9),
+  rmse = c(rmse_m4,rmse_m9)
+)
+print(output)</code></pre>
+<pre><code>##     Model        r2      mse     rmse
+## 1 model 4 0.1946789 19.72473 4.441253
+## 2 model 9 0.2373609 20.19271 4.493629</code></pre>
+<pre class="r"><code>print(anova(model4.lm,model9.lm))</code></pre>
+<pre><code>## Analysis of Variance Table
+## 
+## Model 1: G3 ~ goout + Mjob_athome + Mjob_other + failures
+## Model 2: G3 ~ reason_reputation + reason_other + famsup + freetime + romantic + 
+##     goout + Medu + Mjob_services + failures
+##   Res.Df    RSS Df Sum of Sq      F   Pr(&gt;F)   
+## 1    311 5347.0                                
+## 2    306 5063.7  5    283.32 3.4243 0.005019 **
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+<p>As we can see, model 4 has a lower MSE and RMSE. What does this mean?
+It means that on average, the squared difference between the prediction
+and actual is 21 and the actual predictions deviate by approximately
+4.58.</p>
+<p>With ANOVA, we can see that model9 has an F statistic of 4.4811.
+Which means that model9’s ratio to of signal to noise is 4.48 with a p
+value &lt; 0.001 which means that this F statistics is very unlikely to
+be caused randomly.</p>
+<p>This means that with ANOVA, model9 is shown to be better.</p>
+<p>So there is a contradiction between our test MSE,RSME and ANOVA? -
+this means that although the 5 new features added was good in training,
+it does not mean that it is good in generalization for future
+predictions. As it was deployed on test data, the MSE and RMSE increase
+which shows a degradation in performance.</p>
+<pre class="r"><code>print(&quot;## Model4&quot;)</code></pre>
+<pre><code>## [1] &quot;## Model4&quot;</code></pre>
+<pre class="r"><code>print(summary(model4.lm))</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = G3 ~ goout + Mjob_athome + Mjob_other + failures, 
+##     data = d1_encoded.training.clean)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -12.4170  -1.8421   0.1957   2.8561   8.8897 
+## 
+## Coefficients:
+##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  13.2198     0.7305  18.096  &lt; 2e-16 ***
+## goout        -0.4014     0.2103  -1.909 0.057206 .  
+## Mjob_athome  -2.2113     0.6645  -3.328 0.000981 ***
+## Mjob_other   -1.5039     0.5198  -2.893 0.004084 ** 
+## failures     -2.0192     0.3107  -6.498 3.23e-10 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 4.146 on 311 degrees of freedom
+## Multiple R-squared:  0.1774, Adjusted R-squared:  0.1668 
+## F-statistic: 16.76 on 4 and 311 DF,  p-value: 1.861e-12</code></pre>
+<p>Model4 interpretation - G3 results will be 13.09 on average if all
+features are 0 - unit increase in goout, would lead to a decrease in G3
+results, – but because the P value is high, which means that the
+coefficient is statistically insignificant. - unit increase in
+Mjob_athome would lead to a decrease in G3 while being statistically
+significant – this means that, if a mother is at home, G3 is expected to
+drop - unit increase in Mjob_other would lead to a decrease in G3 while
+being statistically significant. – this means that a student’s G3 grade
+will decrease if the mother has other types of employment such as
+teacher, health or services, - unit increase in failure would lead to a
+decrease in G3 while being statistically significant – therefore, it
+means that if a student fails more, it is more likely their grades will
+decrease. - the model only explains 20.64% of variations of G3, - the F
+statistics is the signal to noise ratio, is 21.48, means that the
+variance explained by the 4 features are 21 times bigger then the noise.
+Which is very strong - p = 5.635e-15 which shows that the chance a
+signal this strong occurs by random is low.</p>
+<p>Let’s do some post check on the data</p>
+<pre class="r"><code># non linearity of actual data
+# we are going to do residuals with model4 
+# can also be done with residuals()
+test_residuals = actual_g3 - preds_model4
+plot(preds_model4,test_residuals)</code></pre>
+<p><img role="img" aria-label src="data:image/png;base64,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" alt width="672" /></p>
+<pre class="r"><code>test_residuals = actual_g3 - preds_model9
+plot(preds_model9,test_residuals) </code></pre>
+<p><img role="img" aria-label src="data:image/png;base64,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bx87BMo+AkrXZidqPvvp/mKfVkCbjl18NQ3Z79/Pr/OcXRn0Yn4t0WoY0+wmJL882bMleCCga1cirS48ak9+6wW07gd68VXrCiXYQUDp2jSgHy5Pds/7tj56feXR2gP/ZWMY02TfjY0PBXTrWvityW++gB3jQB0BZR8BpWvNqfdFph7MU9Q+rX2zOUjp5fyB1e2S7j9b48Huc+GHArp9N6bNyW++gK1xoKufhC0CStdmY5fePGndpHNtXNDtDxu3+3z77HL9hp2/PGsa17ql57qDAV3dD3T17VuTX38BrXGgP3y8/pOwSUDpWmscKAyLgNI1AWWwBJSuCSiDJaB0LWVA2+fMF4zRpD8CStcElMESULomoAyWgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIECShAkIACBAkoQJCAAgQJKECQgAIE/X+wlnjbQPh5ngAAAABJRU5ErkJggg==" alt width="672" />
+No pattern is visible, hence true data can’t be non linear, meaning the
+data is linear</p>
 
 
 

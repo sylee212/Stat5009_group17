@@ -14,6 +14,9 @@ Features (x): 30 socio-economic features.
 ```{r}
 ### Everyone needs to update this based on their paths and run accordingly 
 setwd("D:/Curtin materials/stat5009_decision/A3/Stat5009_group17")
+# install.packages("randomForest")
+# for all random selection for repeatability
+set.seed(75)
 ```
 
 Merge data from both tables 
@@ -40,80 +43,135 @@ head(d3)
 
 convert the categorical data into numerical factors with hot encoding
 ```{r}
-d1$school = ifelse(d1$school == "GP",0,1)
-d1$sex = ifelse(d1$sex == "F",0,1)
-d1$address = ifelse(d1$address == "R",0,1)
-d1$famsize = ifelse(d1$famsize == "LE3",0,1)
-d1$Pstatus = ifelse(d1$Pstatus=="A",0,1)
+d1_encoded = data.frame(d1)
+d1_encoded$school = ifelse(d1_encoded$school == "GP",0,1)
+d1_encoded$sex = ifelse(d1_encoded$sex == "F",0,1)
+d1_encoded$address = ifelse(d1_encoded$address == "R",0,1)
+d1_encoded$famsize = ifelse(d1_encoded$famsize == "LE3",0,1)
+d1_encoded$Pstatus = ifelse(d1_encoded$Pstatus=="A",0,1)
 
 # levels are to force it to follow our desired sequence
-d1$Mjob = factor(d1$Mjob)
-# to see the factors
-levels(d1$Mjob)
-d1$Fjob = factor(d1$Fjob)
-d1$reason = factor(d1$reason)
-d1$guardian = factor(d1$guardian)
-d1$schoolsup = factor(d1$schoolsup)
-d1$famsup = factor(d1$famsup)
-d1$paid =  ifelse(d1$paid == "no",0,1)
-d1$activities =  ifelse(d1$activities == "no",0,1)
-d1$nursery =  ifelse(d1$nursery == "no",0,1)
-d1$higher =  ifelse(d1$higher == "no",0,1)
-d1$internet =  ifelse(d1$internet == "no",0,1)
-d1$romantic =  ifelse(d1$romantic == "no",0,1)
+d1_encoded$Mjob_teacher = ifelse(d1_encoded$Mjob == "teacher" , 1 , 0 )
+d1_encoded$Mjob_health = ifelse(d1_encoded$Mjob == "health" , 1 , 0 )
+d1_encoded$Mjob_services = ifelse(d1_encoded$Mjob == "services" , 1 , 0 )
+d1_encoded$Mjob_athome = ifelse(d1_encoded$Mjob == "at_home" , 1 , 0 )
+d1_encoded$Mjob_other = ifelse(d1_encoded$Mjob == "other" , 1 , 0 )
+# remove the original column 
+d1_encoded$Mjob = NULL
 
-head(d1)
-summary(d1)
+d1_encoded$Fjob_teacher = ifelse(d1_encoded$Fjob == "teacher" , 1 , 0 )
+d1_encoded$Fjob_health = ifelse(d1_encoded$Fjob == "health" , 1 , 0 )
+d1_encoded$Fjob_services = ifelse(d1_encoded$Fjob == "services" , 1 , 0 )
+d1_encoded$Fjob_athome = ifelse(d1_encoded$Fjob == "at_home" , 1 , 0 )
+d1_encoded$Fjob_other = ifelse(d1_encoded$Fjob == "other" , 1 , 0 )
+# remove the original column 
+d1_encoded$Fjob = NULL
+
+d1_encoded$reason_home = ifelse(d1_encoded$reason == "home",1,0)
+d1_encoded$reason_reputation = ifelse(d1_encoded$reason == "reputation",1,0)
+d1_encoded$reason_course = ifelse(d1_encoded$reason == "course",1,0)
+d1_encoded$reason_other = ifelse(d1_encoded$reason == "other",1,0)
+# remove the original column 
+d1_encoded$reason = NULL
+
+d1_encoded$guardian_mother = ifelse(d1_encoded$guardian == "mother",1,0)
+d1_encoded$guardian_father = ifelse(d1_encoded$guardian == "father",1,0)
+d1_encoded$guardian_other = ifelse(d1_encoded$guardian == "other",1,0)
+# remove the original column 
+d1_encoded$guardian = NULL
+
+d1_encoded$schoolsup = ifelse(d1_encoded$schoolsup == "yes", 1 ,0)
+
+d1_encoded$famsup = ifelse(d1_encoded$famsup == "yes",1,0)
+
+d1_encoded$paid =  ifelse(d1_encoded$paid == "no",0,1)
+d1_encoded$activities =  ifelse(d1_encoded$activities == "no",0,1)
+d1_encoded$nursery =  ifelse(d1_encoded$nursery == "no",0,1)
+d1_encoded$higher =  ifelse(d1_encoded$higher == "no",0,1)
+d1_encoded$internet =  ifelse(d1_encoded$internet == "no",0,1)
+d1_encoded$romantic =  ifelse(d1_encoded$romantic == "no",0,1)
+
+head(d1_encoded)
+summary(d1_encoded)
 
 # for d2
-d2$school = ifelse(d2$school == "GP",0,1)
-d2$sex = ifelse(d2$sex == "F",0,1)
-d2$address = ifelse(d2$address == "R",0,1)
-d2$famsize = ifelse(d2$famsize == "LE3",0,1)
-d2$Pstatus = ifelse(d2$Pstatus=="A",0,1)
+d2_encoded = data.frame(d2)
+d2_encoded$school = ifelse(d2_encoded$school == "GP",0,1)
+d2_encoded$sex = ifelse(d2_encoded$sex == "F",0,1)
+d2_encoded$address = ifelse(d2_encoded$address == "R",0,1)
+d2_encoded$famsize = ifelse(d2_encoded$famsize == "LE3",0,1)
+d2_encoded$Pstatus = ifelse(d2_encoded$Pstatus=="A",0,1)
 
 # levels are to force it to follow our desired sequence
-d2$Mjob = factor(d2$Mjob)
-# to see the factors
-levels(d2$Mjob)
-d2$Fjob = factor(d2$Fjob)
-d2$reason = factor(d2$reason)
-d2$guardian = factor(d2$guardian)
-d2$schoolsup = factor(d2$schoolsup)
-d2$famsup = factor(d2$famsup)
-d2$paid =  ifelse(d2$paid == "no",0,1)
-d2$activities =  ifelse(d2$activities == "no",0,1)
-d2$nursery =  ifelse(d2$nursery == "no",0,1)
-d2$higher =  ifelse(d2$higher == "no",0,1)
-d2$internet =  ifelse(d2$internet == "no",0,1)
-d2$romantic =  ifelse(d2$romantic == "no",0,1)
+d2_encoded$Mjob_teacher = ifelse(d2_encoded$Mjob == "teacher" , 1 , 0 )
+d2_encoded$Mjob_health = ifelse(d2_encoded$Mjob == "health" , 1 , 0 )
+d2_encoded$Mjob_services = ifelse(d2_encoded$Mjob == "services" , 1 , 0 )
+d2_encoded$Mjob_athome = ifelse(d2_encoded$Mjob == "at_home" , 1 , 0 )
+d2_encoded$Mjob_other = ifelse(d2_encoded$Mjob == "other" , 1 , 0 )
+# remove the original column 
+d2_encoded$Mjob = NULL
+
+d2_encoded$Fjob_teacher = ifelse(d2_encoded$Fjob == "teacher" , 1 , 0 )
+d2_encoded$Fjob_health = ifelse(d2_encoded$Fjob == "health" , 1 , 0 )
+d2_encoded$Fjob_services = ifelse(d2_encoded$Fjob == "services" , 1 , 0 )
+d2_encoded$Fjob_athome = ifelse(d2_encoded$Fjob == "at_home" , 1 , 0 )
+d2_encoded$Fjob_other = ifelse(d2_encoded$Fjob == "other" , 1 , 0 )
+# remove the original column 
+d2_encoded$Fjob = NULL
+
+d2_encoded$reason_home = ifelse(d2_encoded$reason == "home",1,0)
+d2_encoded$reason_reputation = ifelse(d2_encoded$reason == "reputation",1,0)
+d2_encoded$reason_course = ifelse(d2_encoded$reason == "course",1,0)
+d2_encoded$reason_other = ifelse(d2_encoded$reason == "other",1,0)
+# remove the original column 
+d2_encoded$reason = NULL
+
+d2_encoded$guardian_mother = ifelse(d2_encoded$guardian == "mother",1,0)
+d2_encoded$guardian_father = ifelse(d2_encoded$guardian == "father",1,0)
+d2_encoded$guardian_other = ifelse(d2_encoded$guardian == "other",1,0)
+# remove the original column 
+d2_encoded$guardian = NULL
+
+d2_encoded$schoolsup = ifelse(d2_encoded$schoolsup == "yes", 1 ,0)
+
+d2_encoded$famsup = ifelse(d2_encoded$famsup == "yes",1,0)
+
+d2_encoded$paid =  ifelse(d2_encoded$paid == "no",0,1)
+d2_encoded$activities =  ifelse(d2_encoded$activities == "no",0,1)
+d2_encoded$nursery =  ifelse(d2_encoded$nursery == "no",0,1)
+d2_encoded$higher =  ifelse(d2_encoded$higher == "no",0,1)
+d2_encoded$internet =  ifelse(d2_encoded$internet == "no",0,1)
+d2_encoded$romantic =  ifelse(d2_encoded$romantic == "no",0,1)
+
+head(d2_encoded)
+summary(d2_encoded)
 
 # merge the code again
-d3=merge(d1,d2,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob","Fjob","reason","nursery","internet"))
-
+d3_encoded=merge(d1_encoded,d2_encoded,by=c("school","sex","age","address","famsize","Pstatus","Medu","Fedu","Mjob_teacher","Mjob_health","Mjob_services","Mjob_athome","Mjob_other","Fjob_teacher","Fjob_health","Fjob_services","Fjob_athome","Fjob_other","reason_home","reason_reputation","reason_course","reason_other","nursery","internet"))
+ 
 ```
 
 linear regression for maths students
 Does failing or absences related to the grades?
 ```{r}
 # preparing the data for training and testing
-n = nrow(d1)
-training.d1.ind = sample(1:n, size = 0.8*n)
+n = nrow(d1_encoded)
+training.d1_encoded.ind = sample(1:n, size = 0.8*n)
 
-d1.training = d1[training.d1.ind,]
-d1.test = d1[-training.d1.ind,]
+d1_encoded.training = d1_encoded[training.d1_encoded.ind,]
+d1_encoded.test = d1_encoded[-training.d1_encoded.ind,]
 
 # predicting if failing previously is correlated to final total
-d1.fail.lm = lm(G3~failures, data=d1.training)
-summary(d1.fail.lm)
+d1_encoded.fail.lm = lm(G3~failures, data=d1_encoded.training)
+summary(d1_encoded.fail.lm)
 
 print("#####################")
-d1.absence.lm = lm(G3~absences, data=d1.training)
-summary(d1.absence.lm)
+d1_encoded.absence.lm = lm(G3~absences, data=d1_encoded.training)
+summary(d1_encoded.absence.lm)
 
 print("#####################")
-d1.study.lm = lm(G3~studytime, data=d1.training)
-summary(d1.study.lm)
+d1_encoded.study.lm = lm(G3~studytime, data=d1_encoded.training)
+summary(d1_encoded.study.lm)
 ```
 
 Trying auto multiple linear regression to see which fields are good
@@ -122,7 +180,7 @@ library(leaps)
 mod.fw = regsubsets(
   G3~.,
   nvmax = 8, 
-  data = d1.training,
+  data = d1_encoded.training,
   method = "forward" 
   )
 sm.mod.fw = summary(mod.fw)
@@ -130,19 +188,169 @@ print(sm.mod.fw)
 ```
 As we can see G1 and G2 are highly related and used, which is not good because these are secondary response variables. So we have to recreate the forward model without these
 ```{r}
+# remove the school and sex
+d1_encoded.training.clean = d1_encoded.training[,-c(1,2)]
+d1_encoded.test.clean = d1_encoded.test[, -c(1,2)]
 mod.fw = regsubsets(
   G3~.
   -G1 -G2,
   nvmax = 8, 
-  data = d1.training,
-  method = "forward" 
+  data = d1_encoded.training.clean,
+  method = "exhaustive" 
   )
 sm.mod.fw = summary(mod.fw)
 print(sm.mod.fw)
 
 # for bic, pick the lowest one
-print(sm.mod.fw$bic)
-# higher is better for R^2
-print(sm.mod.fw$adjr2)
-```
+sm.mod.fw.bic = sm.mod.fw$bic
 
+# for printing #
+print(sm.mod.fw.bic)
+ind = 1
+for (x in 1:length(sm.mod.fw.bic) ){
+  t = paste0("Model(",x ,"): ", sm.mod.fw.bic[x])
+  print(t)
+  
+  if ( sm.mod.fw.bic[ind] > sm.mod.fw.bic[x]){
+    ind = x
+  }
+  
+}
+t = paste0("lowest BIc model(",ind, "): ", sm.mod.fw.bic[ind])
+print(t)
+
+
+# higher is better for R^2
+sm.mod.fw.r2 = sm.mod.fw$adjr2
+print("R2")
+print(sm.mod.fw.r2)
+ind = 1
+for (x in 1:length(sm.mod.fw.r2) ){
+  t = paste0("Model(",x ,"): ", sm.mod.fw.r2[x])
+  print(t)
+  
+  if ( sm.mod.fw.r2[ind] < sm.mod.fw.r2[x]){
+    ind = x
+  }
+  
+}
+t = paste0("highest R^2 model(",ind, "): ", sm.mod.fw.r2[ind])
+print(t)
+
+
+
+```
+So what are the features the model has selected?
+- model 1: G3 ~ failures
+- model 2: G3 ~ Medu + failures
+- model 3: G3 ~ Mjob_services + Medu + failures
+- model 4: G3 ~ romantic + Mjob_services + Medu + failures
+- model 5: G3 ~ goout + romantic + Mjob_services + Medu + failures
+- model 6: G3 ~ schoolsup + goout + romantic + Mjob_services + Medu + failures
+- model 7: G3 ~ Mjob_teacher + Mjob_other + schoolsup + goout + romantic + Medu + failures
+- model 8: G3 ~ reason_course + Mjob_teacher + Mjob_other + schoolsup + goout + romantic + Medu + failures
+- model 9: G3 ~ Fjob_teacher +  reason_course + Mjob_teacher + Mjob_other + schoolsup + goout + romantic + Medu + failures
+Hypothesis: 
+1) Failures affect grades
+2) Parent's being home and teaching children are a good indicator
+What is the model with the lowest BIC? which is measure of goodness of fit against complexity, of -41.7615838856981
+- model 3 which is  model 3: G3 ~ Mjob_services + Medu + failures
+
+What is the model with the highest features explaining the variation in response of 0.209158023460924
+- model 9, which is model 9: G3 ~ Fjob_teacher +  reason_course + Mjob_teacher + Mjob_other + schoolsup + goout + romantic + Medu + failures
+
+So what is the better choice?
+- model 3 has the lowest BIC of -41.7615838856981 with R^2 of 0.177531386039353,
+while model 9 has BIC of -23.5607954630196, with R^2 of 0.203649356622243
+
+-- so the transition from model 3 to 9 has an increase of R^2 of 0.02611797 while the BIC increased by 18.20079 
+
+--- Therefore, the trade off between R^2 and BIC is "not worth it" and the model may have been learning noise instead. But let's assess further 
+
+
+```{r}
+# train the model on training data 
+model3.lm = lm(G3 ~ Mjob_services + Medu + failures, data = d1_encoded.training.clean )
+model9.lm = lm(G3 ~Fjob_teacher +  reason_course + Mjob_teacher + Mjob_other + schoolsup + goout + romantic + Medu + failures, data = d1_encoded.training.clean)
+
+# evaluate on test data
+preds_model3 = predict(model3.lm, newdata = d1_encoded.test)
+preds_model9 = predict(model9.lm, newdata = d1_encoded.test)
+
+actual_g3 = d1_encoded.test$G3
+
+# calc mean square error
+mse_m4 = mean((preds_model3-actual_g3)^2)
+mse_m9 = mean((preds_model9-actual_g3)^2)
+
+# calc residual mean square error
+rmse_m4 = sqrt(mse_m4)
+rmse_m9 = sqrt(mse_m9)
+
+# print
+output = data.frame(
+  Model = c("model 3", "model 9"),
+  r2 = c(0.177531386039353,0.203649356622243),
+  mse = c(mse_m4,mse_m9),
+  rmse = c(rmse_m4,rmse_m9)
+)
+print(output)
+
+print(anova(model3.lm,model9.lm))
+```
+As we can see, model 3 has a lower MSE and RMSE. What does this mean? It means that on average, the squared difference between the prediction and actual is 17.35281  and the actual predictions deviate by approximately 4.165671 
+
+With ANOVA, we can see that model9 has an F statistic of 2.7054  Which means that model9's ratio to of signal to noise is with a p value < 0.01 which means that this F statistics is very unlikely to be caused randomly. 
+
+This means that with ANOVA, model9 is shown to be better. 
+
+So there is a contradiction between our test MSE,RSME and ANOVA?
+- this means that although the 5 new features added was good in training, it does not mean that it is good in generalization for future predictions. 
+As it was deployed on test data, the MSE and RMSE increase which shows a degradation in performance. 
+
+```{r}
+print("## Model3")
+print(summary(model3.lm))
+```
+Model4 interpretation
+- G3 results will be 8.6672 on average if all features are 0 
+- unit increase in Mjob_services, would lead to a increase in G3 results, 
+-- because the P value is low, which means that the coefficient is statistically significant.
+- unit increase in Medu would lead to a increase in G3 while being statistically significant 
+-- this means that, if a mother is more educated, G3 is expected to increase
+- unit increase in failure would lead to a decrease in G3 while being statistically significant 
+-- therefore, it means that if a student fails more, it is more likely their grades will decrease. 
+- the model only explains 17.75% of variations of G3, 
+- the F statistics is the signal to noise ratio, is 23.66, means that the variance explained by the 3 features are 23 times bigger then the noise. Which is very strong
+- p = 7.949e-14 which shows that the chance a signal this strong occurs by random is low. 
+
+
+Let's do some post check on the data
+```{r}
+# non linearity of actual data
+# we are going to do residuals with model4 
+# can also be done with residuals()
+test_residuals = actual_g3 - preds_model3
+plot(preds_model3,test_residuals)
+
+test_residuals = actual_g3 - preds_model9
+plot(preds_model9,test_residuals) 
+```
+No pattern is visible, hence true data can't be non linear, meaning the data is linear 
+
+
+# Creating random forest
+```{r}
+library(randomForest)
+
+
+rf = randomForest(G3~. -G1 -G2, data = d1_encoded.training.clean, importance = TRUE, ntree = 500 )
+print(rf)
+
+rf_pred = predict(rf, newdata = d1_encoded.test.clean)
+rf_mse = mean((rf_pred - actual_g3)^2)
+rf_rmse = sqrt(rf_mse)
+print(paste0("MSE: ", rf_mse))
+print(paste0("RMSE: ", rf_rmse))
+```
+Random forest had caputured features to be 27.25% of the cause of variation in G3, with the lowest MSE and RMSE
