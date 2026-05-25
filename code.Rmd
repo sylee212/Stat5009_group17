@@ -246,7 +246,9 @@ So what are the features the model has selected?
 - model 7: G3 ~ famsup + freetime + romantic + goout + Medu + Mjob_services + failures
 - model 8: G3 ~ Mjob_health + famsup + freetime + romantic + goout + Medu + Mjob_services + failures
 - model 9: G3 ~ reason_reputation + reason_other + famsup + freetime + romantic + goout + Medu + Mjob_services + failures
-
+Hypothesis: 
+1) Failures affect grades
+2) Parent's being home and teaching children are a good indicator
 What is the model with the lowest BIC? which is measure of goodness of fit against complexity, of -43.6781849770169
 - model 4, which is  model 4: G3 ~ goout + Mjob_athome + Mjob_other+ failures
 
@@ -299,5 +301,37 @@ With ANOVA, we can see that model9 has an F statistic of 4.4811. Which means tha
 This means that with ANOVA, model9 is shown to be better. 
 
 So there is a contradiction between our test MSE,RSME and ANOVA?
-- this means that although the 5 new features added was good in training, it does not mean that it is good in generalization for future predictions.
+- this means that although the 5 new features added was good in training, it does not mean that it is good in generalization for future predictions. 
+As it was deployed on test data, the MSE and RMSE increase which shows a degradation in performance. 
 
+```{r}
+print("## Model4")
+print(summary(model4.lm))
+```
+Model4 interpretation
+- G3 results will be 13.09 on average if all features are 0 
+- unit increase in goout, would lead to a decrease in G3 results, 
+-- but because the P value is high, which means that the coefficient is statistically insignificant.
+- unit increase in Mjob_athome would lead to a decrease in G3 while being statistically significant 
+-- this means that, if a mother is at home, G3 is expected to drop
+- unit increase in Mjob_other would lead to a decrease in G3 while being statistically significant.
+-- this means that a student's G3 grade will decrease if the mother has other types of employment such as teacher, health or services, 
+- unit increase in failure would lead to a decrease in G3 while being statistically significant 
+-- therefore, it means that if a student fails more, it is more likely their grades will decrease. 
+- the model only explains 20.64% of variations of G3, 
+- the F statistics is the signal to noise ratio, is 21.48, means that the variance explained by the 4 features are 21 times bigger then the noise. Which is very strong
+- p = 5.635e-15 which shows that the chance a signal this strong occurs by random is low. 
+
+
+Let's do some post check on the data
+```{r}
+# non linearity of actual data
+# we are going to do residuals with model4 
+# can also be done with residuals()
+test_residuals = actual_g3 - preds_model4
+plot(preds_model4,test_residuals)
+
+test_residuals = actual_g3 - preds_model9
+plot(preds_model9,test_residuals) 
+```
+No pattern is visible, hence true data can't be non linear, meaning the data is linear 
