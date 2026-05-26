@@ -15,7 +15,7 @@ Features (x): 30 socio-economic features.
 ### Everyone needs to update this based on their paths and run accordingly 
 setwd("D:/Curtin materials/stat5009_decision/A3/Stat5009_group17")
 # install.packages("randomForest")
-install.packages("caret")
+# install.packages("caret")
 # for all random selection for repeatability
 set.seed(75)
 ```
