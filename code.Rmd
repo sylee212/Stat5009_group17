@@ -15,6 +15,7 @@ Features (x): 30 socio-economic features.
 ### Everyone needs to update this based on their paths and run accordingly 
 setwd("D:/Curtin materials/stat5009_decision/A3/Stat5009_group17")
 # install.packages("randomForest")
+install.packages("caret")
 # for all random selection for repeatability
 set.seed(75)
 ```
@@ -324,6 +325,71 @@ Model4 interpretation
 - the F statistics is the signal to noise ratio, is 23.66, means that the variance explained by the 3 features are 23 times bigger then the noise. Which is very strong
 - p = 7.949e-14 which shows that the chance a signal this strong occurs by random is low. 
 
+# creating Lasso and ridge
+```{r}
+library(glmnet)
+x_train= model.matrix(G3~. -G1 -G2, data = d1_encoded.training.clean)[,-1]
+y_train = d1_encoded.training.clean$G3
+
+x_test= model.matrix(G3~. -G1 -G2, data = d1_encoded.test.clean)[,-1]
+y_test = d1_encoded.test.clean$G3
+
+# Lasso 
+# k fold cross validation 
+d1_cv_lasso.lm = cv.glmnet(x_train,y_train, alpha = 1)
+
+# plot error path
+plot(d1_cv_lasso.lm)
+
+best_lambda_lasso = d1_cv_lasso.lm$lambda.min
+sparse_lambda_lasso = d1_cv_lasso.lm$lambda.1se
+
+d1_lasso_coef = predict(d1_cv_lasso.lm, type = "coefficient", s = best_lambda_lasso )
+print(d1_lasso_coef)
+
+# ridge
+d1_cv_ridge.lm = cv.glmnet(x_train,y_train, alpha = 0)
+
+# plot error path
+plot(d1_cv_ridge.lm)
+
+best_lambda_ridge = d1_cv_ridge.lm$lambda.min
+
+d1_ridge_coef = predict(d1_cv_ridge.lm, type = "coefficient", s = best_lambda_ridge )
+print(d1_ridge_coef)
+
+# get stats
+# lasso
+d1_lasso_pred = predict(d1_cv_lasso.lm, s = best_lambda_lasso, newx = x_test)
+lasso_mse = mean((d1_lasso_pred - y_test)^2)
+
+d1_ridge_pred = predict(d1_cv_ridge.lm, s = best_lambda_ridge, newx = x_test)
+ridge_mse = mean((d1_ridge_pred-y_test)^2)
+
+# get the r^2 
+# for glmnet the R^2 is DevRatio
+# finding the index of where the best lambda came from 
+lasso_index = which(d1_cv_lasso.lm$lambda == best_lambda_lasso)
+ridge_index = which(d1_cv_ridge.lm$lambda == best_lambda_ridge)
+
+# pull the best ratio
+train_r2_lasso = d1_cv_lasso.lm$glmnet.fit$dev.ratio[lasso_index]
+train_r2_ridge = d1_cv_ridge.lm$glmnet.fit$dev.ratio[ridge_index]
+print(paste0("Lasso training r^2: ",train_r2_lasso))
+print(paste0("Ridge training r^2: ",train_r2_ridge))
+print(paste0("Lasso MSE: ", lasso_mse))
+print(paste0("Ridge MSE: ", ridge_mse))
+```
+As we can see the ridge regression had the lower MSE and higher r^2. Likely due to the signals being weak and distributed such as Mjob. 
+
+```{r}
+# Convert the sparse matrix to a standard matrix layout
+ridge_mat <- as.matrix(d1_ridge_coef)
+
+print(ridge_mat)
+```
+
+
 
 Let's do some post check on the data
 ```{r}
@@ -352,5 +418,65 @@ rf_mse = mean((rf_pred - actual_g3)^2)
 rf_rmse = sqrt(rf_mse)
 print(paste0("MSE: ", rf_mse))
 print(paste0("RMSE: ", rf_rmse))
+
+# plot the error rate as the number of trees increase
+plot(rf)
+varImpPlot(rf)
+
+
 ```
-Random forest had caputured features to be 27.25% of the cause of variation in G3, with the lowest MSE and RMSE
+Random forest had captured features to be 27.25% of the cause of variation in G3, with the lowest MSE and RMSE
+
+```{r}
+library(randomForest)
+library(caret)
+
+d1_encoded.training.clean.rf = data.frame(d1_encoded.training.clean)
+d1_encoded.test.clean.rf = data.frame(d1_encoded.test.clean)
+
+d1_encoded.training.clean.rf$final = as.factor(ifelse(d1_encoded.training.clean.rf$G3 >= 10, "Pass", "Fail"))
+d1_encoded.test.clean.rf$final = as.factor(ifelse(d1_encoded.test.clean.rf$G3 >= 10, "Pass", "Fail"))
+
+rf = randomForest(final~. -G1 -G2 -G3, data = d1_encoded.training.clean.rf, importance = TRUE, ntree = 500 )
+print(rf)
+
+rf_pred = predict(rf, newdata = d1_encoded.test.clean.rf)
+rf_mse = mean((rf_pred - actual_g3)^2)
+rf_rmse = sqrt(rf_mse)
+print(paste0("MSE: ", rf_mse))
+print(paste0("RMSE: ", rf_rmse))
+
+# plot the error rate as the number of trees increase
+plot(rf)
+varImpPlot(rf)
+
+# checking the classification accuracy
+results = confusionMatrix(rf_pred, d1_encoded.test.clean.rf$final)
+```
+
+
+# final table
+```{r}
+model_name = c("Model 3 (subset linear regression, lowest BIC)",
+               "Model 9 (subset linear regression, highest r^2)",
+               "Lasso regression (regularized linear regression)",
+               "Ridge regression (regularized linear regression)",
+               "Random forest (non linear model)"
+               )
+train_r2 = c( 17.75, 20.36, 15.80, 21.70 , 27.84)
+
+test_mse = c( 17.35,17.05, 16.09, 15.41, 15.35)
+
+test_rmse = sqrt(test_mse)
+
+scoreboard = data.frame(
+  model = model_name,
+  r2 = train_r2,
+  mse = test_mse,
+  rmse = test_rmse
+)
+
+print(scoreboard)
+
+```
+
